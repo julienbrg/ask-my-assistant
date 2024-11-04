@@ -103,8 +103,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'Message is required' })
   }
 
-  const FATOU_API_URL = process.env.FATOU_API_URL || 'http://193.108.55.119:3000/ai/ask'
-
   try {
     const formData = new FormData()
     formData.append('message', message)
@@ -120,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       formData.append('conversationId', conversationId)
     }
 
-    const response = await fetch(FATOU_API_URL, {
+    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
       method: 'POST',
       headers: {
         'x-api-key': process.env.NEXT_PUBLIC_FATOU_API_KEY || '',
