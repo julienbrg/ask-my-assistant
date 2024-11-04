@@ -93,14 +93,22 @@ Committed to building decentralized solutions that empower users and promote dig
 5. Stay friendly but professional`
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Enable CORS for development
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key')
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   console.log('📝 Incoming request:', {
     method: req.method,
     url: req.url,
-    headers: req.headers,
     timestamp: new Date().toISOString(),
   })
 
-  // Method check
   if (req.method !== 'POST') {
     console.warn('❌ Invalid method:', req.method)
     return res.status(405).json({
@@ -111,12 +119,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { message, conversationId } = req.body
 
-  console.log('🔍 Request body:', {
-    messageLength: message?.length || 0,
-    conversationId: conversationId || 'new conversation',
-  })
-
-  // Validation checks
   if (!message) {
     console.warn('❌ Missing message in request body')
     return res.status(400).json({
@@ -125,7 +127,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  // API key check
   const apiKey = process.env.NEXT_PUBLIC_FATOU_API_KEY
   if (!apiKey) {
     console.error('❌ Missing Fatou API key in environment')
@@ -136,45 +137,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    console.log('🚀 Preparing request to Fatou API...')
-    const formData = new FormData()
-    formData.append('message', message)
+    // Create request body using URLSearchParams instead of FormData
+    const requestBody = new URLSearchParams()
+    requestBody.append('message', message)
 
-    if (!conversationId) {
-      console.log('📄 Adding context file for new conversation')
-      const contextFile = new File([contextContent], 'context.md', {
-        type: 'text/markdown',
-      })
-      formData.append('file', contextFile)
+    if (conversationId) {
+      requestBody.append('conversationId', conversationId)
     } else {
-      console.log('🔗 Using existing conversation:', conversationId)
-      formData.append('conversationId', conversationId)
+      // Add context as a regular parameter if it's a new conversation
+      requestBody.append('context', contextContent)
     }
 
     console.log('📡 Sending request to Fatou API...')
     const response = await fetch('http://193.108.55.119:3000/ai/ask', {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
         'x-api-key': apiKey,
       },
-      body: formData,
+      body: requestBody.toString(),
     })
 
+    // Log the response status and headers for debugging
+    console.log('🔍 Fatou API response status:', response.status)
+    console.log('🔍 Fatou API response headers:', Object.fromEntries(response.headers))
+
     if (!response.ok) {
+      let errorText = await response.text()
       console.error('❌ Fatou API error:', {
         status: response.status,
         statusText: response.statusText,
+        error: errorText,
       })
-
-      // Try to get more error details if available
-      let errorDetails
-      try {
-        errorDetails = await response.text()
-      } catch (e) {
-        errorDetails = 'No additional error details available'
-      }
-
-      throw new Error(`Fatou API error: ${response.status} ${response.statusText}\n${errorDetails}`)
+      throw new Error(`Fatou API error: ${response.status} ${response.statusText}\n${errorText}`)
     }
 
     const data: FatouResponse = await response.json()
@@ -186,7 +181,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(data)
   } catch (error) {
-    // Enhanced error logging
     console.error('❌ Error in API handler:', {
       error:
         error instanceof Error
@@ -196,30 +190,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               stack: error.stack,
             }
           : error,
-      requestBody: {
-        messageLength: message?.length || 0,
-        conversationId,
-      },
       timestamp: new Date().toISOString(),
     })
 
-    // Determine error type and send appropriate response
-    if (error instanceof TypeError) {
-      return res.status(500).json({
-        message: 'Network or parsing error',
-        details: error.message,
-        type: 'NETWORK_ERROR',
-      })
-    }
-
-    if ((error as any)?.response?.status === 429) {
-      return res.status(429).json({
-        message: 'Too many requests to Fatou API',
-        details: error instanceof Error ? error.message : 'Rate limit exceeded',
-        type: 'RATE_LIMIT',
-      })
-    }
-
+    // Send more detailed error response
     return res.status(500).json({
       message: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error',
