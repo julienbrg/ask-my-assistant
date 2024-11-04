@@ -22,9 +22,9 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 // https://docs.reown.com/appkit/react/core/custom-networks
 
 const metadata = {
-  name: 'Genji',
-  description: 'Next.js + Web3 Modal + Ethers.js + Chakra UI',
-  url: 'https://genji.netlify.app',
+  name: 'Ask My Assistant',
+  description: '',
+  url: 'https://ask-my-assistant.netlify.app',
   icons: ['./favicon.ico'],
 }
 

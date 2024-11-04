@@ -1,44 +1,70 @@
-# Genji
+# ask-my-assistant
 
-A Next.js Web3 app template.
+A Next.js application featuring a conversational interface with Francesca, powered by [Fatou API](https://github.com/w3hc/fatou).
 
-You can read **[our quickstart](https://github.com/w3hc/genji/blob/main/QUICKSTART.md)** to get started!
+## Installation
 
-## Features
-
-- [Next.js](https://nextjs.org/)
-- [Reown](https://reown.com/appkit)
-- [Ethers.js](https://ethers.org/) (v6)
-- [Chakra UI](https://chakra-ui.com/)
-
-View the [Solidity contract](https://github.com/w3hc/w3hc-hardhat-template/blob/main/contracts/Basic.sol) used in the example.
-
-Web app live at [https://genji-app.netlify.app](https://genji-app.netlify.app).
-
-## Install
+1. Clone the repository:
 
 ```bash
-pnpm i
+git clone https://github.com/your-username/ask-my-assistant.git
+cd ask-my-assistant
 ```
 
-## Run
+2. Install dependencies:
 
-Create a `.env` file:
-
+```bash
+pnpm install
 ```
+
+3. Set up environment variables:
+
+```bash
 cp .env.example .env
 ```
 
-Add your own keys in the `.env` file (you can get it in your [Reown dashboard](https://cloud.reown.com/)), then:
+4. Configure your `.env` file:
+
+```
+# Get yours at https://cloud.walletconnect.com
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID='your_project_id'
+
+# RPC endpoint
+NEXT_PUBLIC_RPC_ENDPOINT_URL='https://sepolia.gateway.tenderly.co'
+
+# Only needed if using the faucet API
+NEXT_PUBLIC_SIGNER_PRIVATE_KEY='your_private_key'
+
+# Get your Fatou API key from the Fatou repository
+FATOU_API_KEY='your_fatou_api_key'
+```
+
+5. Start development server:
 
 ```bash
 pnpm dev
 ```
 
-## Support
+Visit `http://localhost:3000` 🚀
 
-You can contact me via [Element](https://matrix.to/#/@julienbrg:matrix.org), [Farcaster](https://warpcast.com/julien-), [Telegram](https://t.me/julienbrg), [Twitter](https://twitter.com/julienbrg), [Discord](https://discordapp.com/users/julienbrg), or [LinkedIn](https://www.linkedin.com/in/julienberanger/).
+## Development Commands
 
-## Credits
+```bash
+pnpm dev           # Start development server
+pnpm build         # Production build
+pnpm start         # Start production server
+pnpm lint          # Run ESLint
+pnpm format        # Format code with Prettier
+pnpm test          # Run tests
+```
 
-Special thanks to Wesley ([@wslyvh](https://github.com/wslyvh)) for building [Nexth](https://github.com/wslyvh/nexth). I also want to thank the [Wallet Connect](https://walletconnect.com/) team, [@glitch-txs](https://github.com/glitch-txs) in particular. And of course [@ricmoo](https://github.com/ricmoo) for maintaining [Ethers.js](https://ethers.org/)!
+## Contact
+
+You can reach out through:
+
+- [Element](https://matrix.to/#/@julienbrg:matrix.org)
+- [Farcaster](https://warpcast.com/julien-)
+- [Telegram](https://t.me/julienbrg)
+- [Twitter](https://twitter.com/julienbrg)
+- [Discord](https://discordapp.com/users/julienbrg)
+- [LinkedIn](https://www.linkedin.com/in/julienberanger/)
