@@ -93,52 +93,138 @@ Committed to building decentralized solutions that empower users and promote dig
 5. Stay friendly but professional`
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('📝 Incoming request:', {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    timestamp: new Date().toISOString(),
+  })
+
+  // Method check
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+    console.warn('❌ Invalid method:', req.method)
+    return res.status(405).json({
+      message: 'Method not allowed',
+      allowedMethods: ['POST'],
+    })
   }
 
   const { message, conversationId } = req.body
 
+  console.log('🔍 Request body:', {
+    messageLength: message?.length || 0,
+    conversationId: conversationId || 'new conversation',
+  })
+
+  // Validation checks
   if (!message) {
-    return res.status(400).json({ message: 'Message is required' })
+    console.warn('❌ Missing message in request body')
+    return res.status(400).json({
+      message: 'Message is required',
+      receivedBody: req.body,
+    })
   }
 
-  const FATOU_API_URL = process.env.FATOU_API_URL || 'http://193.108.55.119:3000/ai/ask'
+  // API key check
+  const apiKey = process.env.NEXT_PUBLIC_FATOU_API_KEY
+  if (!apiKey) {
+    console.error('❌ Missing Fatou API key in environment')
+    return res.status(500).json({
+      message: 'Server configuration error: Missing API key',
+      error: 'MISSING_API_KEY',
+    })
+  }
 
   try {
+    console.log('🚀 Preparing request to Fatou API...')
     const formData = new FormData()
     formData.append('message', message)
 
     if (!conversationId) {
+      console.log('📄 Adding context file for new conversation')
       const contextFile = new File([contextContent], 'context.md', {
         type: 'text/markdown',
       })
       formData.append('file', contextFile)
-    }
-
-    if (conversationId) {
+    } else {
+      console.log('🔗 Using existing conversation:', conversationId)
       formData.append('conversationId', conversationId)
     }
 
-    const response = await fetch(FATOU_API_URL, {
+    console.log('📡 Sending request to Fatou API...')
+    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.NEXT_PUBLIC_FATOU_API_KEY || '',
+        'x-api-key': apiKey,
       },
       body: formData,
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to get response from Fatou: ${response.status} ${response.statusText}`)
+      console.error('❌ Fatou API error:', {
+        status: response.status,
+        statusText: response.statusText,
+      })
+
+      // Try to get more error details if available
+      let errorDetails
+      try {
+        errorDetails = await response.text()
+      } catch (e) {
+        errorDetails = 'No additional error details available'
+      }
+
+      throw new Error(`Fatou API error: ${response.status} ${response.statusText}\n${errorDetails}`)
     }
 
     const data: FatouResponse = await response.json()
+    console.log('✅ Fatou API response received:', {
+      conversationId: data.conversationId,
+      answerLength: data.answer.length,
+      usage: data.usage,
+    })
+
     return res.status(200).json(data)
   } catch (error) {
-    console.error(error)
+    // Enhanced error logging
+    console.error('❌ Error in API handler:', {
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : error,
+      requestBody: {
+        messageLength: message?.length || 0,
+        conversationId,
+      },
+      timestamp: new Date().toISOString(),
+    })
+
+    // Determine error type and send appropriate response
+    if (error instanceof TypeError) {
+      return res.status(500).json({
+        message: 'Network or parsing error',
+        details: error.message,
+        type: 'NETWORK_ERROR',
+      })
+    }
+
+    if ((error as any)?.response?.status === 429) {
+      return res.status(429).json({
+        message: 'Too many requests to Fatou API',
+        details: error instanceof Error ? error.message : 'Rate limit exceeded',
+        type: 'RATE_LIMIT',
+      })
+    }
+
     return res.status(500).json({
       message: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error',
+      type: 'INTERNAL_ERROR',
+      timestamp: new Date().toISOString(),
     })
   }
 }
