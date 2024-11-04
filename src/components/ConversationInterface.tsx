@@ -1,18 +1,30 @@
 import { useState, useEffect } from 'react'
-import { Box, VStack, Input, Button, Text, useToast, Container, Flex, Avatar, Spinner, Divider } from '@chakra-ui/react'
+import {
+  Box,
+  VStack,
+  Input,
+  Button,
+  Text,
+  useToast,
+  Container,
+  Flex,
+  Avatar,
+  Spinner,
+  Divider,
+  Code,
+} from '@chakra-ui/react'
 import { IoSend } from 'react-icons/io5'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
-// Type for message structure
 interface Message {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'error'
   content: string
   timestamp: string
+  error?: any
 }
 
-// Assistant information
 const ASSISTANT_INFO = {
   name: 'Francesca',
   avatarUrl: '/francesca-image.webp',
@@ -141,6 +153,12 @@ export default function ConversationInterface() {
     ])
 
     try {
+      console.log('🚀 Sending request to /api/ask:', {
+        message: userMessage,
+        conversationId,
+        timestamp: new Date().toISOString(),
+      })
+
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: {
@@ -152,28 +170,58 @@ export default function ConversationInterface() {
         }),
       })
 
+      const responseData = await response.json()
+
+      console.log('📥 Response from /api/ask:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: responseData,
+        timestamp: new Date().toISOString(),
+      })
+
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        throw new Error(responseData.message || 'Failed to get response')
       }
 
-      const data = await response.json()
-
-      if (!conversationId && data.conversationId) {
-        setConversationId(data.conversationId)
+      if (!conversationId && responseData.conversationId) {
+        setConversationId(responseData.conversationId)
       }
 
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: data.answer,
+          content: responseData.answer,
           timestamp: new Date().toISOString(),
         },
       ])
     } catch (error) {
+      console.error('❌ Error in conversation:', {
+        error:
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
+            : error,
+        timestamp: new Date().toISOString(),
+      })
+
+      // Add error message to the conversation
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'error',
+          content: error instanceof Error ? error.message : 'An unexpected error occurred',
+          timestamp: new Date().toISOString(),
+          error: error,
+        },
+      ])
+
       toast({
         title: 'Error',
-        description: 'Failed to get response from assistant',
+        description: error instanceof Error ? error.message : 'Failed to get response from assistant',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -190,6 +238,40 @@ export default function ConversationInterface() {
     }
   }
 
+  const renderMessage = (message: Message) => {
+    if (message.role === 'error') {
+      return (
+        <Box bg="red.100" p={4} borderRadius="lg" width="100%">
+          <Text color="red.800" fontWeight="bold">
+            Error:
+          </Text>
+          <Text color="red.800">{message.content}</Text>
+          {message.error && (
+            <Code colorScheme="red" mt={2} p={2} display="block">
+              {JSON.stringify(message.error, null, 2)}
+            </Code>
+          )}
+        </Box>
+      )
+    }
+
+    return (
+      <Box
+        maxW="80%"
+        bg={message.role === 'user' ? 'blue.500' : 'pink.200'}
+        color={message.role === 'user' ? 'white' : 'black'}
+        px={4}
+        py={2}
+        borderRadius="lg">
+        {message.role === 'user' ? (
+          <Text>{message.content}</Text>
+        ) : (
+          <ReactMarkdown components={MarkdownComponents}>{message.content}</ReactMarkdown>
+        )}
+      </Box>
+    )
+  }
+
   return (
     <Container maxW="container.md" h="calc(100vh - 200px)" display="flex" flexDirection="column">
       <VStack flex="1" spacing={4} overflowY="auto" py={4}>
@@ -198,19 +280,7 @@ export default function ConversationInterface() {
             {message.role === 'assistant' && (
               <Avatar size="sm" name={ASSISTANT_INFO.name} src={ASSISTANT_INFO.avatarUrl} mr={2} />
             )}
-            <Box
-              maxW="80%"
-              bg={message.role === 'user' ? 'blue.500' : 'pink.200'}
-              color={message.role === 'user' ? 'white' : 'black'}
-              px={4}
-              py={2}
-              borderRadius="lg">
-              {message.role === 'user' ? (
-                <Text>{message.content}</Text>
-              ) : (
-                <ReactMarkdown components={MarkdownComponents}>{message.content}</ReactMarkdown>
-              )}
-            </Box>
+            {renderMessage(message)}
             {message.role === 'user' && (
               <Avatar
                 size="sm"
