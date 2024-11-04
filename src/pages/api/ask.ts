@@ -123,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await fetch(FATOU_API_URL, {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.FATOU_API_KEY || '',
+        'x-api-key': process.env.NEXT_PUBLIC_FATOU_API_KEY || '',
       },
       body: formData,
     })
