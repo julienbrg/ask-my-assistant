@@ -61,7 +61,7 @@ export function Header(props: Props) {
         <Flex alignItems="center">
           <ThemeSwitcher />
           <Box mt={2} ml={4}>
-            <Link href="https://github.com/w3hc/genji" isExternal>
+            <Link href="https://github.com/julienbrg/ask-my-assistant" isExternal>
               <Icon as={FaGithub} boxSize={5} _hover={{ color: 'blue.500' }} />
             </Link>
           </Box>
