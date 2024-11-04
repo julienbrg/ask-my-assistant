@@ -42,5 +42,3 @@ next-env.d.ts
 NOTES.md
 genji_app_description*
 .swc
-/logs
-*.log
