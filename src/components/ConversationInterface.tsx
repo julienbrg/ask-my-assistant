@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Box,
   VStack,
@@ -123,7 +123,21 @@ export default function ConversationInterface() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const toast = useToast()
+
+  // Smooth scroll to bottom
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  // Scroll when new messages are added
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   useEffect(() => {
     setMessages([
@@ -142,6 +156,12 @@ export default function ConversationInterface() {
     const userMessage = input
     setInput('')
     setIsLoading(true)
+
+    console.log('💬 Sending message:', {
+      message: userMessage,
+      conversationId,
+      timestamp: new Date().toISOString(),
+    })
 
     setMessages((prev) => [
       ...prev,
@@ -172,10 +192,10 @@ export default function ConversationInterface() {
 
       const responseData = await response.json()
 
-      console.log('📥 Response from /api/ask:', {
+      console.log('📥 Response received:', {
         status: response.status,
-        statusText: response.statusText,
-        data: responseData,
+        conversationId: responseData.conversationId,
+        answerLength: responseData.answer?.length,
         timestamp: new Date().toISOString(),
       })
 
@@ -208,7 +228,6 @@ export default function ConversationInterface() {
         timestamp: new Date().toISOString(),
       })
 
-      // Add error message to the conversation
       setMessages((prev) => [
         ...prev,
         {
@@ -237,6 +256,8 @@ export default function ConversationInterface() {
       handleSubmit()
     }
   }
+
+  // In ConversationInterface.tsx, add this function inside the component:
 
   const renderMessage = (message: Message) => {
     if (message.role === 'error') {
@@ -274,7 +295,24 @@ export default function ConversationInterface() {
 
   return (
     <Container maxW="container.md" h="calc(100vh - 200px)" display="flex" flexDirection="column">
-      <VStack flex="1" spacing={4} overflowY="auto" py={4}>
+      <VStack
+        ref={chatContainerRef}
+        flex="1"
+        spacing={4}
+        overflowY="auto"
+        py={4}
+        css={{
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.300',
+            borderRadius: '24px',
+          },
+        }}>
         {messages.map((message, index) => (
           <Flex key={index} w="100%" justify={message.role === 'user' ? 'flex-end' : 'flex-start'} align="start">
             {message.role === 'assistant' && (
@@ -296,6 +334,8 @@ export default function ConversationInterface() {
             <Spinner size="sm" color="blue.500" />
           </Flex>
         )}
+        {/* Invisible div for scrolling reference */}
+        <div ref={messagesEndRef} />
       </VStack>
       <Divider my={4} />
       <form onSubmit={handleSubmit}>
