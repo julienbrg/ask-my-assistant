@@ -1,6 +1,6 @@
 // src/pages/api/ask.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { fullContext } from '../../utils/context'
 import path from 'path'
 import { promises as fs } from 'fs'
 
@@ -97,18 +97,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (conversationId) {
       formData.append('conversationId', conversationId)
     } else {
-      // Load and combine context files for new conversations
-      console.log('🔄 Loading context for new conversation...')
-      const contextContent = await loadContextFiles()
-
-      const contextFile = new File([contextContent], 'context.md', { type: 'text/markdown' })
-      formData.append('file', contextFile)
-
       console.log('📄 Adding context file to request:', {
-        fileName: 'context.md',
-        contentLength: contextContent.length,
+        contentLength: fullContext.length,
         timestamp: new Date().toISOString(),
       })
+
+      const contextFile = new File([fullContext], 'context.md', { type: 'text/markdown' })
+      formData.append('file', contextFile)
     }
 
     console.log('📡 Sending request to Fatou API...')
