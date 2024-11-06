@@ -8,7 +8,7 @@ I've been committed to building Web3 for more than ten years. I've co-founded of
 
 I was born and raised in Paris, France. In 2007, I completed a degree in Chinese Studies (Philosophy, Literature, and Arts) at INALCO (National Institute for Oriental Languages and Civilizations). For the next five years, I worked as a Chinese teacher in several high schools, including a particularly interesting stint at the Saigon French International High School in Vietnam.
 
-My journey into the Web3 space began in 2011 when I first heard about Bitcoin. By April 2013, I was experimenting with and designing decentralized apps. Later that year, while working on an iOS payment app, I came across Vitalik Buterin's Ethereum white paper.
+My journey into the Web3 space began in April 2013: I was experimenting with and designing decentralized apps. Later that year, while working on an iOS payment app, I came across Vitalik Buterin's Ethereum white paper.
 
 In 2014, I joined OpenClassrooms, one of Europe's leading e-learning companies. There, I set up the customer service department from scratch, managing over 1,000 requests weekly.
 
