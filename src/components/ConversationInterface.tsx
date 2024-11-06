@@ -12,6 +12,7 @@ import {
   Spinner,
   Divider,
   Code,
+  Link,
 } from '@chakra-ui/react'
 import { IoSend } from 'react-icons/io5'
 import ReactMarkdown from 'react-markdown'
@@ -38,6 +39,7 @@ const MarkdownComponents = {
       {props.children}
     </Text>
   ),
+
   h1: (props: any) => (
     <Text as="h1" fontSize="2xl" fontWeight="bold" my={4}>
       {props.children}
@@ -105,16 +107,23 @@ const MarkdownComponents = {
     </Text>
   ),
   a: (props: any) => (
-    <Text
-      as="a"
-      color="blue.500"
+    <Link
+      color="white"
       href={props.href}
-      target="_blank"
-      rel="noopener noreferrer"
+      isExternal
       textDecoration="underline"
-      _hover={{ color: 'blue.600' }}>
+      _hover={{
+        color: 'blue.200',
+        textDecoration: 'none',
+      }}
+      onClick={(e) => {
+        if (!props.href || props.href === '#') {
+          e.preventDefault()
+          return
+        }
+      }}>
       {props.children}
-    </Text>
+    </Link>
   ),
 }
 
@@ -279,15 +288,29 @@ export default function ConversationInterface() {
     return (
       <Box
         maxW="80%"
-        bg={message.role === 'user' ? 'blue.500' : 'pink.200'}
-        color={message.role === 'user' ? 'white' : 'black'}
+        bg={message.role === 'user' ? '#45a2f8' : '#8c1c84'}
+        color="white"
         px={4}
         py={2}
-        borderRadius="lg">
+        borderRadius="lg"
+        boxShadow="sm"
+        sx={{
+          '& a': {
+            color: 'white',
+            textDecoration: 'underline',
+            transition: 'color 0.2s ease-in-out',
+            _hover: {
+              color: 'blue.200',
+              textDecoration: 'none',
+            },
+          },
+        }}>
         {message.role === 'user' ? (
           <Text>{message.content}</Text>
         ) : (
-          <ReactMarkdown components={MarkdownComponents}>{message.content}</ReactMarkdown>
+          <ReactMarkdown components={MarkdownComponents} remarkPlugins={[]}>
+            {message.content}
+          </ReactMarkdown>
         )}
       </Box>
     )

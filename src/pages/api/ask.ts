@@ -91,24 +91,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const { message, conversationId } = req.body
+
     const formData = new FormData()
     formData.append('message', message)
 
     if (conversationId) {
       formData.append('conversationId', conversationId)
     } else {
-      console.log('📄 Adding context file to request:', {
-        contentLength: fullContext.length,
-        timestamp: new Date().toISOString(),
+      const contextBlob = new Blob([fullContext], {
+        type: 'text/markdown',
       })
 
-      const contextFile = new File([fullContext], 'context.md', { type: 'text/markdown' })
-      formData.append('file', contextFile)
+      formData.append('file', contextBlob, 'context.md')
     }
 
     console.log('📡 Sending request to Fatou API...')
     const response = await fetch('http://193.108.55.119:3000/ai/ask', {
-      // const response = await fetch('http://localhost:3000/ai/ask', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,

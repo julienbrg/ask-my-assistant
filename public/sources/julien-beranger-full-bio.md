@@ -25,3 +25,5 @@ In 2023, along with some colleagues and friends, I started the W3HC (Web3 Hacker
 Throughout my career, I've had the chance to be involved in various interesting projects. One highlight was winning first prize at the DAO Global Hackathon for the Concord project. More recently, I was a recipient of the RetroPGF Round 3 for Gov.
 
 I continue to volunteer with Emmaüs Connect, supporting their efforts in digital inclusion. My technical toolkit currently includes Solidity, Node.js, TypeScript, and frameworks like React.js, Next.js, and Nest.js.
+
+I was part of the Raid Guild Cohort VII (Raid Guild is an awesome group of hackers, devs, designers specialiesed in Web3 )
