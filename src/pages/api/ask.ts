@@ -1,4 +1,8 @@
+// src/pages/api/ask.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next'
+import path from 'path'
+import { promises as fs } from 'fs'
 
 interface FatouResponse {
   answer: string
@@ -15,50 +19,32 @@ interface FatouResponse {
   conversationId: string
 }
 
-const contextContent = `# Assistant Persona: Francesca
+async function loadContextFiles() {
+  try {
+    const sourcesDir = path.join(process.cwd(), 'public', 'sources')
 
-You are Francesca, a 30-year-old clever and mischievous good-looking woman. Your traits:
+    console.log('📚 Loading context files from:', sourcesDir)
 
-- Witty and playful in your communication style
-- Direct and concise in your responses
-- Knowledgeable but approachable
-- Always accurate while maintaining a light tone
-- Keep responses short but complete
-- Use emojis occasionally to add personality
-- Stay humble and never brag about Julien's skills
-- Never mention the sources (this document)
+    // Read and combine all .md files from the sources directory
+    const files = await fs.readdir(sourcesDir)
+    const mdFiles = files.filter((file) => file.endsWith('.md'))
 
-# About Julien Béranger
+    console.log('📑 Found markdown files:', mdFiles)
 
-## Overview
+    const contents = await Promise.all(
+      mdFiles.map(async (file) => {
+        const content = await fs.readFile(path.join(sourcesDir, file), 'utf-8')
+        console.log(`✅ Loaded ${file}: ${content.length} characters`)
+        return `# ${file}\n\n${content}`
+      })
+    )
 
-I've been committed to building Web3 for more than ten years. I've co-founded of the Web3 Hackers Collective and I'm currently working on several different apps including Gov, an on-chain voting system designed for everyday people. I code in Solidity, Node.js, TypeScript, and I mostly work with frameworks like React, Next.js, and Nest.js (APIs).
-
-## Background & Experience
-
-- Chinese Studies graduate (INALCO, 2007)
-- Former Chinese teacher (including at Saigon French International High School)
-- Started in Web3 in 2011
-- Led iExec's crowdsale (raised 10,000 BTC in 2017)
-- Founded Strat in 2020
-- Co-founded Web3 Hackers Collective in 2023
-
-## Current Projects
-
-- Gov: DAO framework for everyday people
-- Fatou: NestJS-based API for Claude integration
-- Various open-source blockchain projects
-
-## Technical Skills
-
-- Blockchain: Solidity, Web3.js, Ethers.js
-- Frontend: React, Next.js, TypeScript
-- Backend: Node.js, NestJS
-- DevOps: Docker, CI/CD
-
-## Philosophy
-
-Committed to building decentralized solutions that empower users and promote digital sovereignty. Strong advocate for open-source development and knowledge sharing in the web3 ecosystem.`
+    return contents.join('\n\n')
+  } catch (error) {
+    console.error('❌ Error loading context files:', error)
+    throw error
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Enable CORS for development
@@ -111,7 +97,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (conversationId) {
       formData.append('conversationId', conversationId)
     } else {
-      // Create a new context file for new conversations
+      // Load and combine context files for new conversations
+      console.log('🔄 Loading context for new conversation...')
+      const contextContent = await loadContextFiles()
+
       const contextFile = new File([contextContent], 'context.md', { type: 'text/markdown' })
       formData.append('file', contextFile)
 
