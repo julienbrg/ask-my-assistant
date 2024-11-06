@@ -2,6 +2,8 @@
 
 A Next.js application featuring a conversational interface with Francesca, powered by [Fatou API](https://github.com/w3hc/fatou).
 
+The app is meant to be deployable by anyone. Feel free to reach out to [Julien](https://github.com/julienbrg) if you need help.
+
 ## Installation
 
 1. Clone the repository:
