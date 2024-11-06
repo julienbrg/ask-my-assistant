@@ -143,6 +143,12 @@ export default function ConversationInterface() {
     setInput('')
     setIsLoading(true)
 
+    console.log('💬 Sending message:', {
+      message: userMessage,
+      conversationId,
+      timestamp: new Date().toISOString(),
+    })
+
     setMessages((prev) => [
       ...prev,
       {
@@ -172,10 +178,10 @@ export default function ConversationInterface() {
 
       const responseData = await response.json()
 
-      console.log('📥 Response from /api/ask:', {
+      console.log('📥 Response received:', {
         status: response.status,
-        statusText: response.statusText,
-        data: responseData,
+        conversationId: responseData.conversationId,
+        answerLength: responseData.answer?.length,
         timestamp: new Date().toISOString(),
       })
 
@@ -208,7 +214,6 @@ export default function ConversationInterface() {
         timestamp: new Date().toISOString(),
       })
 
-      // Add error message to the conversation
       setMessages((prev) => [
         ...prev,
         {
