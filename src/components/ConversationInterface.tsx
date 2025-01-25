@@ -152,7 +152,8 @@ export default function ConversationInterface() {
     setMessages([
       {
         role: 'assistant',
-        content: "Hello! I'm Francesca, Julien's assistant. How can I help you, my friend?",
+        content:
+          "Hello! I'm Francesca, Julien's assistant. How can I help you, my friend? I can speak more than 100 languages, so feel free to use your own! 😉",
         timestamp: new Date().toISOString(),
       },
     ])
@@ -266,7 +267,10 @@ export default function ConversationInterface() {
     }
   }
 
-  // In ConversationInterface.tsx, add this function inside the component:
+  useEffect(() => {
+    console.log('Browser language:', navigator.language)
+    console.log('All browser languages:', navigator.languages)
+  }, [])
 
   const renderMessage = (message: Message) => {
     if (message.role === 'error') {
@@ -317,7 +321,7 @@ export default function ConversationInterface() {
   }
 
   return (
-    <Container maxW="container.md" h="calc(100vh - 200px)" display="flex" flexDirection="column">
+    <Container maxW="container.md" h="calc(100vh - 120px)" display="flex" flexDirection="column">
       <VStack
         ref={chatContainerRef}
         flex="1"
