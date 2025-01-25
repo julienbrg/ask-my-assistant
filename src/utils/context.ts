@@ -5,5 +5,7 @@ export const julienBio = `# Julien's Bio\n\n${require('../../public/sources/juli
 
 export const julienGithub = `# Julien's GitHub\n\n${require('../../public/sources/julien-beranger-github-readme-page.md')}`
 
+export const vitaliksPost = `# Vitalik's post about ethereum\n\n${require('../../public/sources/vitalik-s-post.md')}`
+
 // Combine all context
-export const fullContext = [assistantContext, julienBio, julienGithub].join('\n\n')
+export const fullContext = [assistantContext, julienBio, julienGithub, vitaliksPost].join('\n\n')
