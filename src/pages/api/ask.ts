@@ -1,6 +1,5 @@
 // src/pages/api/ask.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { fullContext } from '../../utils/context'
 import path from 'path'
 import { promises as fs } from 'fs'
 
@@ -98,17 +97,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (conversationId) {
       formData.append('conversationId', conversationId)
-    } else {
-      const contextBlob = new Blob([fullContext], {
-        type: 'text/markdown',
-      })
-
-      formData.append('file', contextBlob, 'context.md')
     }
 
     console.log('📡 Sending request to Fatou API...')
-    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
-      // const response = await fetch('http://localhost:3000/ai/ask', {
+    // const response = await fetch('http://193.108.55.119:3000/ai/ask', {
+    const response = await fetch('http://localhost:3000/ai/ask', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
