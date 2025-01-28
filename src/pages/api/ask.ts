@@ -100,8 +100,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     console.log('📡 Sending request to Fatou API...')
-    // const response = await fetch('http://193.108.55.119:3000/ai/ask', {
-    const response = await fetch('http://localhost:3000/ai/ask', {
+    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
+      // const response = await fetch('http://localhost:3000/ai/ask', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
