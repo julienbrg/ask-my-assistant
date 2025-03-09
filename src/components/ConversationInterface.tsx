@@ -24,6 +24,9 @@ interface Message {
   content: string
   timestamp: string
   error?: any
+  model?: string
+  txHash?: string
+  explorerLink?: string
 }
 
 const ASSISTANT_INFO = {
@@ -205,7 +208,9 @@ export default function ConversationInterface() {
       console.log('📥 Response received:', {
         status: response.status,
         conversationId: responseData.conversationId,
+        model: responseData.model,
         answerLength: responseData.answer?.length,
+        txHash: responseData.txHash,
         timestamp: new Date().toISOString(),
       })
 
@@ -217,14 +222,17 @@ export default function ConversationInterface() {
         setConversationId(responseData.conversationId)
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: responseData.answer,
-          timestamp: new Date().toISOString(),
-        },
-      ])
+      // Create assistant message with additional metadata
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: responseData.answer,
+        timestamp: new Date().toISOString(),
+        model: responseData.model,
+        txHash: responseData.txHash,
+        explorerLink: responseData.explorerLink,
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       console.error('❌ Error in conversation:', {
         error:
@@ -272,6 +280,23 @@ export default function ConversationInterface() {
     console.log('All browser languages:', navigator.languages)
   }, [])
 
+  const renderMessageMetadata = (message: Message) => {
+    if (message.role !== 'assistant' || (!message.model && !message.txHash)) {
+      return null
+    }
+
+    return (
+      <Box mt={1} fontSize="xs" opacity={0.7}>
+        {message.model && <Text>Model: {message.model}</Text>}
+        {message.txHash && message.explorerLink && (
+          <Link href={message.explorerLink} isExternal>
+            Tx: {message.txHash.substring(0, 8)}...
+          </Link>
+        )}
+      </Box>
+    )
+  }
+
   const renderMessage = (message: Message) => {
     if (message.role === 'error') {
       return (
@@ -312,9 +337,12 @@ export default function ConversationInterface() {
         {message.role === 'user' ? (
           <Text>{message.content}</Text>
         ) : (
-          <ReactMarkdown components={MarkdownComponents} remarkPlugins={[]}>
-            {message.content}
-          </ReactMarkdown>
+          <>
+            <ReactMarkdown components={MarkdownComponents} remarkPlugins={[]}>
+              {message.content}
+            </ReactMarkdown>
+            {renderMessageMetadata(message)}
+          </>
         )}
       </Box>
     )

@@ -1,5 +1,5 @@
 import { ThemingProps } from '@chakra-ui/react'
-export const SITE_DESCRIPTION = 'Francesca is Julien’s assistant. It interacts with Fatou API.'
+export const SITE_DESCRIPTION = 'Francesca is Julien’s assistant. It interacts with Rukh API.'
 export const SITE_NAME = 'Francesca'
 export const SITE_URL = 'https://ask-my-assistant.netlify.app'
 

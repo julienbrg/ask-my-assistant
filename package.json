@@ -1,6 +1,6 @@
 {
   "name": "ask-my-assistant",
-  "description": "Conversational interface interacting with Fatou API",
+  "description": "Conversational interface interacting with Rukh API",
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
