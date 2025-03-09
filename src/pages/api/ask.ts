@@ -1,47 +1,19 @@
-// src/pages/api/ask.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import path from 'path'
-import { promises as fs } from 'fs'
 
-interface FatouResponse {
-  answer: string
-  usage: {
-    costs: {
-      inputCost: number
-      outputCost: number
-      totalCost: number
-      inputTokens: number
-      outputTokens: number
-    }
-    timestamp: string
-  }
-  conversationId: string
-}
-
-async function loadContextFiles() {
-  try {
-    const sourcesDir = path.join(process.cwd(), 'public', 'sources')
-
-    console.log('📚 Loading context files from:', sourcesDir)
-
-    // Read and combine all .md files from the sources directory
-    const files = await fs.readdir(sourcesDir)
-    const mdFiles = files.filter((file) => file.endsWith('.md'))
-
-    console.log('📑 Found markdown files:', mdFiles)
-
-    const contents = await Promise.all(
-      mdFiles.map(async (file) => {
-        const content = await fs.readFile(path.join(sourcesDir, file), 'utf-8')
-        console.log(`✅ Loaded ${file}: ${content.length} characters`)
-        return `# ${file}\n\n${content}`
-      })
-    )
-
-    return contents.join('\n\n')
-  } catch (error) {
-    console.error('❌ Error loading context files:', error)
-    throw error
+interface RukhResponse {
+  output?: string
+  answer?: string
+  model?: string
+  network?: string
+  txHash?: string
+  explorerLink?: string
+  conversationId?: string
+  sessionId?: string
+  usage?: {
+    input_tokens?: number
+    output_tokens?: number
+    cache_creation_input_tokens?: number
+    cache_read_input_tokens?: number
   }
 }
 
@@ -80,56 +52,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_FATOU_API_KEY
-  if (!apiKey) {
-    console.error('❌ Missing Fatou API key in environment')
-    return res.status(500).json({
-      message: 'Server configuration error: Missing API key',
-      error: 'MISSING_API_KEY',
-    })
-  }
-
   try {
-    const { message, conversationId } = req.body
-
     const formData = new FormData()
     formData.append('message', message)
+    formData.append('model', 'anthropic')
+    formData.append('context', 'francesca')
 
     if (conversationId) {
       formData.append('conversationId', conversationId)
     }
 
-    console.log('📡 Sending request to Fatou API...')
-    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
-      // const response = await fetch('http://localhost:3000/ai/ask', {
+    console.log('📡 Sending request to Rukh API...')
+    const response = await fetch('https://rukh.w3hc.org/ask', {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-      },
       body: formData,
     })
 
-    console.log('🔍 Fatou API response status:', response.status)
-    console.log('🔍 Fatou API response headers:', Object.fromEntries(response.headers))
+    console.log('🔍 Rukh API response status:', response.status)
+    console.log('🔍 Rukh API response headers:', Object.fromEntries(response.headers))
 
     if (!response.ok) {
       let errorText = await response.text()
-      console.error('❌ Fatou API error:', {
+      console.error('❌ Rukh API error:', {
         status: response.status,
         statusText: response.statusText,
         error: errorText,
       })
-      throw new Error(`Fatou API error: ${response.status} ${response.statusText}\n${errorText}`)
+      throw new Error(`Rukh API error: ${response.status} ${response.statusText}\n${errorText}`)
     }
 
-    const data: FatouResponse = await response.json()
-    console.log('✅ Fatou API response received:', {
-      conversationId: data.conversationId,
-      answerLength: data.answer.length,
-      usage: data.usage,
+    const data: RukhResponse = await response.json()
+
+    // Log the complete response for debugging
+    console.log('📄 Full Rukh API response:', JSON.stringify(data, null, 2))
+
+    // Determine the response content from various possible fields
+    let responseContent = data.output || data.answer || ''
+
+    // Check if we have a valid response
+    if (!responseContent) {
+      console.warn('⚠️ No content found in API response, using fallback message')
+      responseContent =
+        "I apologize, but I couldn't process your request properly. Please try again or contact support if the issue persists."
+    }
+
+    // Log meaningful information about the response
+    console.log('✅ API response details:', {
+      contentLength: responseContent.length,
+      sessionId: data.sessionId || data.conversationId || 'not provided',
+      model: data.model || 'unknown',
+      usageInfo: data.usage ? 'available' : 'not available',
+      timestamp: new Date().toISOString(),
     })
 
-    return res.status(200).json(data)
+    // Return normalized response structure to the client
+    return res.status(200).json({
+      answer: responseContent,
+      conversationId: data.conversationId || data.sessionId || conversationId || null,
+      usage: data.usage || null,
+      model: data.model || null,
+      txHash: data.txHash || null,
+      explorerLink: data.explorerLink || null,
+    })
   } catch (error) {
     console.error('❌ Error in API handler:', {
       error:
